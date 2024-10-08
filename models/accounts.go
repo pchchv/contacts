@@ -2,6 +2,7 @@ package models
 
 import (
 	"os"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
@@ -20,6 +21,31 @@ type Account struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 	Token    string `json:"token";sql:"-"`
+}
+
+// Validates incoming user data.
+func (account *Account) Validate() (map[string]interface{}, bool) {
+	if !strings.Contains(account.Email, "@") {
+		return u.Message(false, "Email address is required"), false
+	}
+
+	if len(account.Password) < 6 {
+		return u.Message(false, "Password is required"), false
+	}
+
+	// Email must be unique
+	temp := &Account{}
+
+	// checking for errors and duplicate emails
+	if err := GetDB().Table("accounts").Where("email = ?", account.Email).First(temp).Error; err != nil && err != gorm.ErrRecordNotFound {
+		return u.Message(false, "Connection error. Please retry"), false
+	}
+
+	if temp.Email != "" {
+		return u.Message(false, "Email address already in use by another user."), false
+	}
+
+	return u.Message(false, "Requirement passed"), true
 }
 
 func Login(email, password string) map[string]interface{} {
