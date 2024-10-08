@@ -48,3 +48,14 @@ func Login(email, password string) map[string]interface{} {
 	resp["account"] = account
 	return resp
 }
+
+func GetUser(u uint) *Account {
+	acc := &Account{}
+	GetDB().Table("accounts").Where("id = ?", u).First(acc)
+	if acc.Email == "" { // user not found!
+		return nil
+	}
+
+	acc.Password = ""
+	return acc
+}
