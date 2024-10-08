@@ -1,4 +1,4 @@
-package env
+package models
 
 import (
 	"log"
@@ -7,7 +7,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func init() {
+func initEnv() {
 	// Load values from .env into the system.
 	if err := godotenv.Load(); err != nil {
 		log.Panic("No .env file found")
