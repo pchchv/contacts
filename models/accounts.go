@@ -48,6 +48,33 @@ func (account *Account) Validate() (map[string]interface{}, bool) {
 	return u.Message(false, "Requirement passed"), true
 }
 
+func (account *Account) Create() map[string]interface{} {
+	if resp, ok := account.Validate(); !ok {
+		return resp
+	}
+
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(account.Password), bcrypt.DefaultCost)
+	account.Password = string(hashedPassword)
+
+	GetDB().Create(account)
+
+	if account.ID <= 0 {
+		return u.Message(false, "Failed to create account, connection error.")
+	}
+
+	// create a new JWT token for a new registered account
+	tk := &Token{UserId: account.ID}
+	token := jwt.NewWithClaims(jwt.GetSigningMethod("HS256"), tk)
+	tokenString, _ := token.SignedString([]byte(os.Getenv("token_password")))
+	account.Token = tokenString
+
+	account.Password = "" // delete password
+
+	response := u.Message(true, "Account has been created")
+	response["account"] = account
+	return response
+}
+
 func Login(email, password string) map[string]interface{} {
 	account := &Account{}
 	err := GetDB().Table("accounts").Where("email = ?", email).First(account).Error
