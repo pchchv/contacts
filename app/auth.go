@@ -11,7 +11,7 @@ import (
 	u "github.com/pchchv/contacts/utils"
 )
 
-var JwtAuthentication = func(next http.Handler) http.Handler {
+func JwtAuthentication(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// list of endpoints that do not require authorization
 		notAuth := []string{"/api/user/new", "/api/user/login"}
